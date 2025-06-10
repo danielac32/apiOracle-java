@@ -1,0 +1,4 @@
+Manifest-Version: 1.0
+Created-By: 1.0 (daniel)
+Class-Path: libjar/ojdbc6.jar libjar/slf4j-simple-1.7.36.jar libjar/gson-2.13.1.jar libjar/javalin-6.6.0.jar libjar/poi-3.17.jar libjar/poi-ooxml-3.17.jar libjar/poi-ooxml-schemas-3.17.jar libjar/xmlbeans-2.6.0.jar libjar/stax-api-1.0.1.jar libjar/nio.jar
+Main-Class: project.Main
