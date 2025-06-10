@@ -1,10 +1,11 @@
 package project.api.pagadas;
 
 import com.sun.net.httpserver.HttpExchange;
-import project.OracleDb;
-import project.QueryParser;
-import project.ResponseUtils;
-import project.SqlFileLoader;
+import project.db.OracleDb;
+import project.utils.QueryParser;
+import project.utils.ResponseUtils;
+import project.utils.SqlFileLoader;
+
 
 import java.io.IOException;
 import java.util.List;

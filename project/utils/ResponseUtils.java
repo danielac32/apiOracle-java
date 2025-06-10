@@ -1,4 +1,4 @@
-package project;
+package project.utils;
 import com.sun.net.httpserver.HttpExchange;
 
 import java.io.IOException;
