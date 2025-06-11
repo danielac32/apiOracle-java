@@ -1,26 +1,18 @@
-package project;
+package project.api.trasmiciones;
+
 import com.sun.net.httpserver.HttpExchange;
 import project.db.OracleDb;
 import project.utils.QueryParser;
 import project.utils.ResponseUtils;
 import project.utils.SqlFileLoader;
 
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
 import java.io.IOException;
-import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.io.*;
-import java.util.*;
-import java.util.Date;
-import java.text.SimpleDateFormat;
 
+public class Transmisiones {
 
-
-public class ApiController {
-
-
-    public void pagadas_retenciones_handlePost(HttpExchange exchange) throws IOException {
+    public void execute(HttpExchange exchange) throws IOException {
         try {
             String uriQuery = exchange.getRequestURI().getQuery();
             Map<String, String> params = QueryParser.parseQueryParams(uriQuery);
@@ -37,15 +29,14 @@ public class ApiController {
                 ResponseUtils.respuestaJSON(exchange, 200, response);
             }
 
-            String sql = SqlFileLoader.loadFile("pagadas_retenciones.sql", desde, hasta);
+            String sql = SqlFileLoader.loadFile("TRANSMISIONES_ORDENES.sql", desde, hasta);
             System.out.println(sql);
             OracleDb db = new OracleDb();
             db.connect("config1");
             List<Map<String, Object>> result = db.executeQuery(sql);
             db.close();
-           // System.out.println(result);
+            // System.out.println(result);
             ResponseUtils.respuestaJSON(exchange, 200, result);
-
         }catch (Exception e) {
             e.printStackTrace();
             ResponseUtils.respuestaJSON(exchange, 500, Map.of("error", e.getMessage()));
@@ -54,10 +45,4 @@ public class ApiController {
 }
 
 
-/* // Simular respuesta
-        Map<String, String> response = Map.of(
-                "desde", desde != null ? desde : "no proporcionado",
-                "hasta", hasta != null ? hasta : "no proporcionado"
-        );
 
-        ResponseUtils.respuestaJSON(exchange, 200, response);*/

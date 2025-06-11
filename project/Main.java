@@ -9,6 +9,8 @@ import java.net.InetSocketAddress;
 import java.net.URI;
 import java.util.*;
 import project.api.RouterHandler;
+import project.xmltxt.XmlRoute;
+import project.xmltxt.process.Process;
 
 public class Main {
 
@@ -67,14 +69,16 @@ public class Main {
             System.out.println(ex);
         }*/
 
+
+       // Process process = new Process();
+       // process.procesarDirectorio(null,"xml");
+
         HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
         System.out.println("✅ Servidor corriendo en http://localhost:" + port);
 
-        //server.createContext("/api/query", new ApiRoute());
-        // Registrar ruta /api/query
 
-        server.createContext("/api/query", new RouterHandler());
-
+        server.createContext("/api/query", new RouterHandler());//ruta para consultar ordenes
+        server.createContext("/api/xmltxt", new XmlRoute());//ruta para subir xml
 
         /*server.createContext("/api/query/pagadas-retenciones", new RetencionesController());
         server.createContext("/api/query/pagadas", new PagadasController());

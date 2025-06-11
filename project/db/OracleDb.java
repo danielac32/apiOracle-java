@@ -25,6 +25,35 @@ public class OracleDb {
         }
     }
 
+
+    public void insert(String query, List<Object> params) {
+        if (connection == null) {
+            System.err.println("Primero debes establecer la conexión");
+            System.exit(0);
+            return;
+        }
+
+        try (PreparedStatement pstmt = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
+            for (int i = 0; i < params.size(); i++) {
+                pstmt.setObject(i + 1, params.get(i));
+            }
+
+            int rowsAffected = pstmt.executeUpdate();
+
+            // Opcional: si hay clave generada (como ID autoincrementable)
+            try (ResultSet generatedKeys = pstmt.getGeneratedKeys()) {
+                if (generatedKeys.next()) {
+                    generatedKeys.getInt(1);
+                }
+            }
+
+        } catch (SQLException e) {
+            System.err.println("❌ Error al ejecutar el INSERT: " + e.getMessage());
+            System.exit(0);
+        }
+    }
+
+
     /*public List<Map<String, Object>> executeQuery(String query, Map<String, String> params) {
         if (connection == null) {
             System.err.println("Primero debes establecer la conexión");
