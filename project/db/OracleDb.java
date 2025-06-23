@@ -21,7 +21,7 @@ public class OracleDb {
             System.out.println("✅ Conexión establecida.");
         } catch (Exception e) {
             System.err.println("❌ Error al conectar con la base de datos: " + e.getMessage());
-            System.exit(0);
+            //System.exit(0);
         }
     }
 
@@ -29,27 +29,43 @@ public class OracleDb {
     public void insert(String query, List<Object> params) {
         if (connection == null) {
             System.err.println("Primero debes establecer la conexión");
-            System.exit(0);
             return;
         }
 
-        try (PreparedStatement pstmt = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
+        try (PreparedStatement pstmt = connection.prepareStatement(query)) {
+            // Validar parámetros
+            int expectedParams = query.replaceAll("[^?]", "").length();
+            if (params.size() != expectedParams) {
+                throw new SQLException("Número incorrecto de parámetros. Esperados: " +
+                        expectedParams + ", Recibidos: " + params.size());
+            }
+
+            // Asignar parámetros con logging
             for (int i = 0; i < params.size(); i++) {
-                pstmt.setObject(i + 1, params.get(i));
+                Object param = params.get(i);
+                System.out.printf("Param %d: %s (%s)%n",
+                        i+1,
+                        param != null ? param.toString() : "NULL",
+                        param != null ? param.getClass().getSimpleName() : "NULL");
+                pstmt.setObject(i + 1, param);
             }
 
             int rowsAffected = pstmt.executeUpdate();
-
-            // Opcional: si hay clave generada (como ID autoincrementable)
-            try (ResultSet generatedKeys = pstmt.getGeneratedKeys()) {
-                if (generatedKeys.next()) {
-                    generatedKeys.getInt(1);
-                }
-            }
+            //System.out.println("✅ Filas afectadas: " + rowsAffected);
+            connection.commit();  // Asegurar el commit
 
         } catch (SQLException e) {
-            System.err.println("❌ Error al ejecutar el INSERT: " + e.getMessage());
-            System.exit(0);
+            System.err.println("❌ Error en INSERT: " + e.getMessage());
+            try {
+                connection.rollback();  // Revertir en caso de error
+            } catch (SQLException ex) {
+                System.err.println("Error al hacer rollback: " + ex.getMessage());
+            }
+
+            // Información adicional del error
+            System.err.println("SQLState: " + e.getSQLState());
+            System.err.println("Error Code: " + e.getErrorCode());
+            e.printStackTrace();
         }
     }
 
@@ -118,11 +134,30 @@ public class OracleDb {
             return Collections.emptyList();
         }
     }
+    public static void describeTable(OracleDb db) {
+        String query = "SELECT column_name, data_type, data_length FROM all_tab_columns " +
+                "WHERE table_name = 'TXT_SENIAT' ORDER BY column_id";
 
+        try {
+            System.out.println("=== Estructura de TXT_SENIAT ===");
+            System.out.println("Columna\t\tTipo\t\tLongitud");
+            System.out.println("----------------------------------");
+
+            ResultSet rs = (ResultSet) db.executeQuery(query);
+            while (rs.next()) {
+                System.out.println(rs.getString("column_name") + "\t\t" +
+                        rs.getString("data_type") + "\t\t" +
+                        rs.getInt("data_length"));
+            }
+            rs.close();
+        } catch (SQLException e) {
+            System.err.println("Error al obtener estructura de la tabla: " + e.getMessage());
+        }
+    }
     public void executeUpdate(String query, List<Object> params) {
         if (connection == null) {
             System.err.println("Primero debes establecer la conexión");
-            System.exit(0);
+           // System.exit(0);
             return;
         }
 
@@ -135,7 +170,7 @@ public class OracleDb {
 
         } catch (SQLException e) {
             System.err.println("❌ Error al ejecutar la operación de escritura: " + e.getMessage());
-            System.exit(0);
+            //System.exit(0);
         }
     }
 

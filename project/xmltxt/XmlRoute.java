@@ -1,4 +1,5 @@
 package project.xmltxt;
+import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 
@@ -13,9 +14,18 @@ public class XmlRoute implements HttpHandler {
 
     @Override
     public void handle(HttpExchange exchange) throws IOException {
+        Headers headers = exchange.getResponseHeaders();
+        headers.add("Access-Control-Allow-Origin", "*");
+        headers.add("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+        headers.add("Access-Control-Allow-Headers", "Content-Type, Authorization");
         String method = exchange.getRequestMethod();
         String path = exchange.getRequestURI().getPath(); //
-
+// Manejar solicitud OPTIONS (preflight)
+        if ("OPTIONS".equalsIgnoreCase(method)) {
+            exchange.sendResponseHeaders(204, -1); // 204 No Content
+            exchange.getResponseBody().close();
+            return;
+        }
         if (!"GET".equalsIgnoreCase(method)) {
             ResponseUtils.respuestaJSON(exchange, 405, Map.of("error", "Método no permitido"));
             return;

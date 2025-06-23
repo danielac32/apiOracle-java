@@ -16,17 +16,49 @@ import project.xmltxt.dataClass.XmlSeniat;
 
 import java.io.File;
 import java.io.IOException;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
+import java.util.*;
+import  java.util.logging.*;
 
 public class Process {
 
+    public static String extraerYFormatearFecha(String nombreArchivo) {
+        // Expresión regular para encontrar el patrón _YYYYMMDD_
+        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("_(\\d{8})_");
+        java.util.regex.Matcher matcher = pattern.matcher(nombreArchivo);
 
+        if (matcher.find()) {
+            String fechaStr = matcher.group(1);
+            try {
+                // Parsear día, mes y año
+                String año = fechaStr.substring(0, 4);
+                String mes = fechaStr.substring(4, 6);
+                String dia = fechaStr.substring(6, 8);
+
+                // Validar valores básicos
+                int mesInt = Integer.parseInt(mes);
+                int diaInt = Integer.parseInt(dia);
+
+                if (mesInt < 1 || mesInt > 12 || diaInt < 1 || diaInt > 31) {
+                    return "[Fecha inválida]";
+                }
+
+                return String.format("%s/%s/%s", dia, mes, año); // Formato DD/MM/YYYY
+            } catch (Exception e) {
+                return "[Error fecha]";
+            }
+        }
+        return "[Sin fecha]";
+    }
+
+    public static String formatFileSize(long sizeBytes) {
+        if (sizeBytes < 1024) return sizeBytes + " B";
+        if (sizeBytes < 1024 * 1024) return String.format("%.2f KB", sizeBytes / 1024.0);
+        return String.format("%.2f MB", sizeBytes / (1024.0 * 1024.0));
+    }
     public void list(HttpExchange exchange, String rutaDirectorio) throws IOException {
         File directorio = new File(rutaDirectorio);
 
@@ -45,7 +77,16 @@ public class Process {
         // Convertir File[] a List<String> con los nombres de los archivos
         List<String> nombresArchivos = new ArrayList<>();
         for (File archivo : archivos) {
-            nombresArchivos.add(archivo.getName());
+            String nombreArchivo = archivo.getName();
+            String fechaFormateada = extraerYFormatearFecha(nombreArchivo);
+            String tamañoFormateado = formatFileSize(archivo.length());
+
+            String nombreCompleto = String.format("%s %s %s",
+                    nombreArchivo,
+                    fechaFormateada,
+                    tamañoFormateado);
+
+            nombresArchivos.add(nombreCompleto);
         }
 
         // Crear respuesta estructurada
@@ -151,9 +192,17 @@ public class Process {
                     if (!xml.getBanco().equals("999") && !xml.getBanco().equals("000") && !xml.getForma().equals("79084") && !xml.getForma().equals("99084") && !xml.getForma().equals("00084")){
                            // System.out.println(xml.toString());
                         t = crearTxt(xml);
-                        System.out.println(t);
-                        //insertarTxtSeniat(t, db);
-                        planillasProcesadas++;
+                       // System.out.println(t.toString());
+                        try {
+                            insertarTxtSeniat(t, db);
+                            planillasProcesadas++;
+                        } catch (Exception e) {
+                            errores++;
+                            System.out.println("❌ Error al insertar en BD - Archivo: " + archivo.getName());
+                            System.out.println("   - Causa: " + e.getMessage());
+                            System.out.println("   - Datos: " + t.toString());
+                            System.out.println("----------------------------------");
+                        }
                     }else{
 
                     }
@@ -204,14 +253,14 @@ public class Process {
     }
 
     public static TxtSeniat crearTxt(XmlSeniat xml) throws Exception {
-        TxtSeniat txt = null;
+        TxtSeniat txt = new TxtSeniat();
 
         String organismo;
         String banco;
         String agencia;
         String rif;
 
-        txt = new TxtSeniat();
+
 
         //1.- Procesando el Organismo
         organismo = xml.getForma().substring(0,2);
@@ -282,37 +331,46 @@ public class Process {
         //12.-Procesando el Cod_Safe
         txt.setSafe(xml.getSafe());
 
+        txt.setEstado(0);       // Por ejemplo, 0 si no hay estado definido
+        txt.setAnho(0);      // Año actual o extraer de la fecha
+        txt.setLoteSeq(0);      // 0 si no hay secuencia de lote
+        txt.setPlanSeq(0);      // 0 si no hay secuencia de planilla
+
         return txt;
     }
 
     public void insertarTxtSeniat(TxtSeniat t, OracleDb db) {
-        String sqlInsert = """
-            INSERT INTO TXT_SENIAT (
-                ORGA_ID, INFN_CODIGO, AGENCIA_CODIGO, IDENT_CNTB, PLANILLA, FECHA_RECAUDACION,
-                TIPO_TRANSACCION, FORMA_CODIGO, MONTO_EFECTIVO, MONTO_OTROS_PAGOS, COD_SEGURIDAD,
-                SAFE, ESTADO, ANHO, LOTE_SEQ, PLAN_SEQ
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """;
+            String sqlInsert = "INSERT INTO TXT_SENIAT (" +
+                    "ORGA_ID, INFN_CODIGO, AGENCIA_CODIGO, IDENT_CNTB, PLANILLA, FECHA_RECAUDACION, " +
+                    "TIPO_TRANSACCION, FORMA_CODIGO, MONTO_EFECTIVO, MONTO_OTROS_PAGOS, COD_SEGURIDAD, " +
+                    "SAFE, ESTADO, ANHO, LOTE_SEQ, PLAN_SEQ" +
+                    ") VALUES (?, ?, ?, ?, ?, TO_DATE(?, 'DD/MM/YYYY'), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-        List<Object> params = new ArrayList<>();
-        params.add(t.getOrganismo());
-        params.add(t.getBanco());
-        params.add(t.getAgencia());
-        params.add(t.getRif());
-        params.add(t.getPlanilla());
-        params.add(new java.sql.Date(t.getFechaRecaudacion().getTime()));
-        params.add(t.getTipoTransaccion());
-        params.add(t.getForma());
-        params.add(t.getEfectivo());
-        params.add(t.getOtrosPagos());
-        params.add(t.getSeguridad());
-        params.add(t.getSafe());
-        params.add(t.getEstado());
-        params.add(t.getAnho());
-        params.add(t.getLoteSeq());
-        params.add(t.getPlanSeq());
+            SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+            String fechaFormateada = t.getFechaRecaudacion() != null ?
+                    sdf.format(t.getFechaRecaudacion()) : null;
 
-        db.insert(sqlInsert, params); // Usa el método insert definido anteriormente
+            List<Object> params = Arrays.asList(
+                    t.getOrganismo(),
+                    t.getBanco(),
+                    t.getAgencia(),
+                    t.getRif(),
+                    t.getPlanilla(),
+                    fechaFormateada,  // Fecha como String en formato DD/MM/YYYY
+                    t.getTipoTransaccion(),
+                    t.getForma(),
+                    t.getEfectivo(),
+                    t.getOtrosPagos(),
+                    t.getSeguridad(),
+                    t.getSafe(),
+                    t.getEstado(),
+                    t.getAnho(),
+                    t.getLoteSeq(),
+                    t.getPlanSeq()
+            );
+
+            db.insert(sqlInsert, params);
+
     }
 
 }
