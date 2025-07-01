@@ -28,7 +28,7 @@ public class DivisasBolivares {
                 ResponseUtils.respuestaJSON(exchange, 200, response);
             }
 
-            String sql = SqlFileLoader.loadFile("ORDENES_PENDIENTES_CON_BENEFICIARIO.sql", desde, hasta);
+            String sql = SqlFileLoader.loadFile("Dolares_a_Bolivares.sql", desde, hasta);
             System.out.println(sql);
             OracleDb db = new OracleDb();
             db.connect("config1");
