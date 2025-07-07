@@ -13,7 +13,9 @@ import project.api.pagada_retencion.RetencionController;
 import project.api.pagadas.PagadasController;
 import project.api.pagadas2.Pagadas2;
 import project.api.pendientes.PendientesController;
+import project.api.retenciones_partidas.RetencionesPartidasController;
 import project.api.trasmiciones.Transmisiones;
+import project.db.OracleDb;
 import project.utils.ResponseUtils;
 
 import java.io.IOException;
@@ -32,6 +34,7 @@ public class RouterHandler implements HttpHandler {
      private final Pendientes2 pendientes2 = new Pendientes2();
 
      private final DivisasBolivares divisasBolivares = new DivisasBolivares();
+     private final RetencionesPartidasController retencionesPartidas = new RetencionesPartidasController();
 
      /*
      TRANSMISION DE ORDENES( ORDENES TRANSMITIDAS BCV)
@@ -87,12 +90,41 @@ public class RouterHandler implements HttpHandler {
             return;
         }
 
+        if ("GET".equalsIgnoreCase(method) && "/api/query/connection".equals(path)) {
+            OracleDb db = new OracleDb();
+            boolean connectionStatus = false;
+
+            try {
+                db.connect("config1");
+                // Intentamos hacer una consulta simple para verificar la conexión
+                List<Map<String, Object>> result = db.executeQuery("SELECT COUNT(*) TOTAL FROM PAGO WHERE ROWNUM = 1");
+                if (result != null && !result.isEmpty()) {
+                    connectionStatus = true;
+                }
+            } catch (Exception e) {
+                connectionStatus = false;
+            } finally {
+                try {
+                    db.close();
+                } catch (Exception e) {
+                    // Ignorar errores al cerrar la conexión
+                }
+            }
+            ResponseUtils.respuestaJSON(exchange, 200, Map.of(
+                    "status", connectionStatus
+            ));
+            return;
+        }
+
         if (!"POST".equalsIgnoreCase(method)) {
             ResponseUtils.respuestaJSON(exchange, 405, Map.of("error", "Método no permitido"));
             return;
         }
 
         switch (path) {
+            case "/api/query/retenciones-partidas":
+                retencionesPartidas.execute(exchange);
+                break;
             case "/api/query/pagadas":
                 pagadas.execute(exchange);
                 break;

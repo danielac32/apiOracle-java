@@ -40,7 +40,7 @@ WHERE P.PAGO_ID = PI.PAGO_ID
   AND P.TIPG_ID = SP.TIPG_ID 
   AND P.RAZON_ID_FIN IN (0,1,2,3,5)    
   AND P.TIPG_ID IN (1,9,10)
-  AND P.ANHO IN (2022,2023)
+  --AND P.ANHO IN (2022,2023)
 --  AND P.ORGA_ID=026
   AND Sp.segui_id = (SELECT MAX(segui_id)
                       FROM seguimiento_pago B
@@ -93,7 +93,7 @@ WHERE P.PAGO_ID = PNI.PAGO_ID
   AND P.ORGA_ID	= SP.ORGA_ID 
   AND P.TIPG_ID = SP.TIPG_ID   
   AND P.TIPG_ID IN (1,9,10)
-  AND P.ANHO IN (2022,2023) 
+  ---AND P.ANHO IN (2022,2023)
 --  AND P.ORGA_ID=026
   AND P.RAZON_ID_FIN IN (0,1,2,3,5)   
   AND Sp.segui_id = (SELECT MAX(segui_id)

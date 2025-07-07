@@ -10,7 +10,8 @@ SELECT p.anho presupuesto,
        DECODE(p.anho , 2007, ROUND((pi.monto_bruto/1000) ,2), 2006, ROUND((pi.monto_bruto/1000) ,2), pi.monto_bruto) monto_orden, 
        r.monto monto_1_x_500_ant, 
        DECODE(p.anho , 2007, ROUND((r.monto/1000) ,2), 2006, ROUND((r.monto/1000) ,2), r.monto) monto_1_x_500, 
-       p.fecha_pago 
+       p.fecha_pago ,
+       pi.observacion
 FROM pago p, pago_imputado pi, retencion_x_pago r, organismo o,retencion rt, unidad_administradora ua 
 WHERE p.anho = pi.anho 
   AND p.orga_id = pi.orga_id 

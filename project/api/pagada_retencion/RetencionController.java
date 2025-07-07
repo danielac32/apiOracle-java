@@ -25,7 +25,7 @@ public class RetencionController {
 
             if(desde == null || hasta == null){
                 Map<String, ?> response = Map.of(
-                        "susses", true,
+                        "susses", false,
                         "msg", "queryparams no proporcionado"
                 );
 

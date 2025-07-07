@@ -1,4 +1,4 @@
-package project.api.pagadas;
+package project.api.retenciones_partidas;
 
 import com.sun.net.httpserver.HttpExchange;
 import project.db.OracleDb;
@@ -11,8 +11,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-public class PagadasController {
-
+public class RetencionesPartidasController {
     public void execute(HttpExchange exchange) throws IOException {
         try {
             String uriQuery = exchange.getRequestURI().getQuery();
@@ -23,20 +22,20 @@ public class PagadasController {
 
             if(desde == null || hasta == null){
                 Map<String, ?> response = Map.of(
-                        "susses", true,
+                        "susses", false,
                         "msg", "queryparams no proporcionado"
                 );
 
                 ResponseUtils.respuestaJSON(exchange, 200, response);
             }
 
-            String sql = SqlFileLoader.loadFile("pagadas.sql", desde, hasta);
+            String sql = SqlFileLoader.loadFile("retenciones_partidas.sql", desde, hasta);
             System.out.println(sql);
             OracleDb db = new OracleDb();
             db.connect("config1");
             List<Map<String, Object>> result = db.executeQuery(sql);
             db.close();
-            //System.out.println(result);
+            // System.out.println(result);
             ResponseUtils.respuestaJSON(exchange, 200, result);
         }catch (Exception e) {
             e.printStackTrace();
