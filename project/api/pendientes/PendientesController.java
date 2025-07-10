@@ -5,6 +5,7 @@ import project.db.OracleDb;
 import project.utils.QueryParser;
 import project.utils.ResponseUtils;
 import project.utils.SqlFileLoader;
+import project.utils.ThreadConsult;
 
 
 import java.io.IOException;
@@ -28,14 +29,25 @@ public class PendientesController {
                 );
                 ResponseUtils.respuestaJSON(exchange, 200, response);
             }
-            String sql = SqlFileLoader.loadFile("pendientes.sql", desde, hasta);
+            /*String sql = SqlFileLoader.loadFile("pendientes.sql", desde, hasta);
             System.out.println(sql);
             OracleDb db = new OracleDb();
             db.connect("config1");
             List<Map<String, Object>> result = db.executeQuery(sql);
             db.close();
             // System.out.println(result);
-            ResponseUtils.respuestaJSON(exchange, 200, result);
+            ResponseUtils.respuestaJSON(exchange, 200, result);*/
+            ThreadConsult task = new ThreadConsult(desde, hasta,"pendientes.sql", result -> {
+                try {
+                    ResponseUtils.respuestaJSON(exchange, 200, result);
+                } catch (IOException ioEx) {
+                    ioEx.printStackTrace();
+                    try {
+                        ResponseUtils.respuestaJSON(exchange, 500, Map.of("error", "Error al enviar respuesta"));
+                    } catch (IOException ignored) {}
+                }
+            });
+            task.start();// Iniciar el hilo
         }catch (Exception e) {
             e.printStackTrace();
             ResponseUtils.respuestaJSON(exchange, 500, Map.of("error", e.getMessage()));

@@ -9,15 +9,40 @@ import java.net.InetSocketAddress;
 import java.net.URI;
 import java.util.*;
 import project.api.RouterHandler;
+import project.api.pagadas.PagadasController;
 import project.db.OracleDb;
 import project.xmltxt.XmlRoute;
 import project.xmltxt.process.Process;
+
+/*
+class Multithreading extends Thread {
+    public void run()
+    {
+        try {
+            // Displaying the thread that is running
+            System.out.println(
+                    "Thread " + Thread.currentThread().getId()
+                            + " is running");
+        }
+        catch (Exception e) {
+
+            // Throwing an exception
+            System.out.println("Exception is caught");
+        }
+    }
+}
+*/
+
 
 public class Main {
 
     public static void main(String[] args) throws IOException {
         int port = 9000;
+        System.out.println(args[0]);
+        System.out.println(args[1]);
 
+        /*Multithreading object = new Multithreading();
+        object.start();*/
         /*String rawQuery = "SELECT p.anho presupuesto, " +
                 "o.orga_id||' '||o.denominacion organismo, " +
                 "pi.unad_id cod_unidad_administradora, " +
@@ -73,8 +98,9 @@ public class Main {
 
        // Process process = new Process();
        // process.procesarDirectorio(null,"xml");
-
-        HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
+        //final PagadasController pagadasController = new PagadasController();
+        //pagadasController.GnerateExcel( );
+        HttpServer server = HttpServer.create(new InetSocketAddress( Integer.parseInt(args[1])/*port*/), 0);
         System.out.println("✅ Servidor corriendo en http://localhost:" + port);
 
 

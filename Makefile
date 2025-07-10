@@ -32,7 +32,7 @@ $(RUN_FILE): $(JAR_FILE)
 
 run: $(RUN_FILE)
 	clear
-	./$(RUN_FILE)
+	./$(RUN_FILE) -p 9000
 
 clean:
 	rm -rf $(BIN_DIR)
